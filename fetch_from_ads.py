@@ -15,6 +15,10 @@ This is part of ivoatex, covered by the GPL.  See COPYING for details.
 import json
 import os
 from urllib import parse, request
+from urllib.error import HTTPError
+
+import bibtexparser
+from bibtexparser.model import Field
 
 API_URL = "https://api.adsabs.harvard.edu/v1/"
 
@@ -35,10 +39,11 @@ def do_api_request(_path, _payload=None, **arguments):
     auth_header = {"Authorization": "Bearer %s"%ADS_TOKEN}
     req = request.Request(
         API_URL+_path+"?"+parse.urlencode(arguments),
-        _payload,
-        auth_header)
+        data=_payload,
+        headers=auth_header)
     f = request.urlopen(req)
     return json.load(f)
+
 
 
 def main():
@@ -49,10 +54,22 @@ def main():
 
     bibtex_args = {
         "bibcode": [r["bibcode"] for r in bibcode_recs["response"]["docs"]],}
+
     bibtex_recs = do_api_request("export/bibtex",
         _payload=json.dumps(bibtex_args).encode("ascii"))
-    with open("docrepo.bib", "w") as f:
-        f.write(bibtex_recs["export"])
+    library = bibtexparser.parse_string(bibtex_recs["export"])
+
+    for bibcode, entry in library.entries_dict.items():
+        resp = do_api_request(f"resolver/{bibcode}/pub_html")
+        docURL = resp["link"]
+        entry.set_field(Field("url", docURL))
+        # just check the link
+        try:
+            f = request.urlopen(docURL)
+        except HTTPError as error:
+            print(f"{bibcode} - problem accessing {docURL} ",error)
+
+    bibtexparser.write_file("docrepo.bib",library)
 
 
 if __name__=="__main__":
