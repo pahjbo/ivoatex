@@ -34,7 +34,7 @@ jobs:
         sudo apt install texlive-latex-base texlive-latex-recommended \
                          texlive-latex-extra texlive-fonts-recommended \
                          librsvg2-bin latexmk \
-                         pdftk xsltproc latexmk cm-super
+                         pdftk xsltproc latexmk cm-super pandoc
 
     - name: Build the document
       run: make ${{ env.doc_name }}-draft.pdf
