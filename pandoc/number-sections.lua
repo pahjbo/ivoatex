@@ -65,8 +65,9 @@ end
 function Header(el)
  --   pandoc.log.info("header ".. pandoc.utils.stringify(el.content) ..' ' .. tostring(in_appendix_mode))
     local level = el.level
-    -- NEW: Check for Appendix trigger (before incrementing)
+    -- Check for Appendix trigger (before incrementing)
     -- If we're not already in appendix mode and this is an H1
+    -- TODO think a bit more about how to detect the start of appendices.
     if not in_appendix_mode and level == 1 then
         -- Convert header content to a plain string
         local header_text = pandoc.utils.stringify(el.content)
